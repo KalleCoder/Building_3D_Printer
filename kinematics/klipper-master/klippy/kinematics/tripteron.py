@@ -2,7 +2,7 @@ import math, logging
 import stepper, mathutil
 
 # Constants
-PIOVER180 = 0.01745329251994329576923690768489
+PIOVER180 = 0.01745329251994329576923690768489 ## if PI is over 180 (something with converting radians to degrees)
 SLOW_RATIO = 3.
 
 # Dummy "none" kinematics support (for developer testing)
@@ -38,6 +38,12 @@ class NoneKinematics:
             above=0., maxval=self.max_velocity)
         self.max_z_accel = config.getfloat('max_z_accel', self.max_accel,
                                           above=0., maxval=self.max_accel)
+        
+
+        ## Here I need to setup arm angle
+        self.arm_a = PIOVER180 
+        
+
 
     def get_steppers(self):
         return []
