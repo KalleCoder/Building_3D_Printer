@@ -10,9 +10,8 @@ SLOW_RATIO = 3.
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
 
-class ColinearTripteronKinematics:
+class TripteronKinematics:
     def __init__(self, toolhead, config):
-
         # Setup tower rails
         stepper_configs = [config.getsection('stepper_' + a) for a in 'abc']
         rail_a = stepper.PrinterRail(
@@ -51,14 +50,6 @@ class ColinearTripteronKinematics:
                              for rail, arm2 in zip(self.rails, self.arm2)]
 
 
-        ## Build plate max and min
-        self.max_xy2 = min(print_radius, radius) ## 
-        max_xy = math.sqrt(self.max_xy2)
-        self.axes_min = toolhead.Coord(-max_xy, -max_xy, self.min_z, 0.)
-        self.axes_max = toolhead.Coord(max_xy, max_xy, self.max_z, 0.)
-        self.set_position([0., 0., 0.], ())
-
-
         # Determine tower locations in cartesian space
         self.angles = [sconfig.getfloat('angle', angle)
                        for sconfig, angle in zip(stepper_configs,
@@ -82,12 +73,19 @@ class ColinearTripteronKinematics:
                           for rail in self.rails])
         self.min_z = config.getfloat('minimum_z_position', 0, maxval=self.max_z)
         self.limit_z = min([ep - arm
-                            for ep, arm in zip(self.abs_endstops, self.arm_length)])
-        self.min_arm_length = min_arm_length = min(self.arm_length)
+                            for ep, arm in zip(self.abs_endstops, self.arm_lengths)])
+        self.min_arm_length = min_arm_length = min(self.arm_lengths)
         self.min_arm2 = min_arm_length**2
         logging.info(
             "Delta max build height %.2fmm (radius tapered above %.2fmm)"
             % (self.max_z, self.limit_z))
+        
+        ## Build plate max and min
+        self.max_xy2 = min(print_radius, radius) ## 
+        max_xy = math.sqrt(self.max_xy2)
+        self.axes_min = toolhead.Coord(-max_xy, -max_xy, self.min_z, 0.)
+        self.axes_max = toolhead.Coord(max_xy, max_xy, self.max_z, 0.)
+        self.set_position([0., 0., 0.], ())
  
         
         
@@ -206,5 +204,5 @@ class ColinearTripteronKinematics:
 
 
 def load_kinematics(toolhead, config):
-    return ColinearTripteronKinematics(toolhead, config)
+    return TripteronKinematics(toolhead, config)
 
