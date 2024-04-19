@@ -12,6 +12,11 @@ SLOW_RATIO = 3.
 
 class TripteronKinematics:
     def __init__(self, toolhead, config):
+
+        # Testing something new!
+        self.printer = config.get_printer()
+
+
         # Setup tower rails
         stepper_configs = [config.getsection('stepper_' + a) for a in 'abc']
         rail_a = stepper.PrinterRail(
@@ -125,7 +130,8 @@ class TripteronKinematics:
         y = ((actuator_mm[0] * (g_x - b_x) + actuator_mm[1] * (a_x - g_x) + actuator_mm[2] * (b_x - a_x)) / self.d) * self.steps_per_revolution
         z = ((actuator_mm[0] * (b_y * g_x - b_x * g_y) + actuator_mm[1] * (a_x * g_y - a_y * g_x) + actuator_mm[2] * (a_y * b_x - a_x * b_y)) / self.d) * self.steps_per_revolution
 
-        return x, y, z
+        ## testing with brackets here
+        return [x, y, z]
 
 
     def calc_position(self, stepper_positions):
