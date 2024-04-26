@@ -50,7 +50,7 @@ class TripteronKinematics:
         # Setup boundary checks
         self.need_home = True
         self.limit_xy2 = -1.
-        self.home_position = tuple(self._actuator_to_cartesian(self.abs_endstops))
+        self.home_position = tuple(self.actuator_to_cartesian(self.abs_endstops))
         self.max_z = min([rail.get_homing_info().position_endstop for rail in self.rails])
     
         self.min_z = config.getfloat('minimum_z_position', above=0.)
@@ -104,7 +104,7 @@ class TripteronKinematics:
 
     def calc_position(self, stepper_positions):
         spos = [stepper_positions[rail.get_name()] for rail in self.rails]
-        return self._actuator_to_cartesian(self, spos)
+        return self.actuator_to_cartesian(self, spos)
 
 
     def set_position(self, newpos, homing_axes):
@@ -170,11 +170,11 @@ class TripteronKinematics:
             'cone_start_z': self.limit_z,
         }
     
-
     ## ADDITIONAL STUFF THAT CAN BE GOOD ####
     def _motor_off(self, print_time):
         self.limit_xy2 = -1.
         self.need_home = True
 
+# Define the load_kinematics function outside the TripteronKinematics class
 def load_kinematics(toolhead, config):
     return TripteronKinematics(toolhead, config)
