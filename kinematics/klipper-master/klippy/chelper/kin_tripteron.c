@@ -1,34 +1,52 @@
-// Cartesian kinematics stepper pulse time generation
-//
-// Copyright (C) 2018-2019  Kevin O'Connor <kevin@koconnor.net>
-//
-// This file may be distributed under the terms of the GNU GPLv3 license.
-
-#include <stdlib.h> // malloc
-#include <string.h> // memset
-#include "compiler.h" // __visible
-#include "itersolve.h" // struct stepper_kinematics
-#include "pyhelper.h" // errorf
-#include "trapq.h" // move_get_coord
-
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+#include "compiler.h"
+#include "itersolve.h"
+#include "trapq.h"
 
 struct tripteron_stepper {
     struct stepper_kinematics sk;
-    double arm2, tower_x, tower_y;
+    double rail_positions[3];
+    double radius;
+    double arm_lengths[3];
+    double angles[3];
 };
 
+struct tripteron_kinematics {
+    struct stepper_kinematics sk;
+    struct tripteron_stepper *ts;
+};
 
-// this function needs to set the position of the stepper motors
-// which is a double
-
-static double tripteron_stepper_calc_position(struct stepper_kinematics *sk, struct move *m, double move_time)
-{
-
+static double tripteron_stepper_calc_position(struct stepper_kinematics *sk, struct move *m, double move_time) {
+    struct tripteron_kinematics *tk = (struct tripteron_kinematics *) sk;
+    struct tripteron_stepper *ts = tk->ts;
+    struct coord c = move_get_coord(m, move_time);
+    
+    // Calculate the position based on tripteron kinematics
+    double dx = ts->rail_positions[0] - c.x;
+    double dy = ts->rail_positions[1] - c.y;
+    double dz = ts->rail_positions[2] - c.z;
+    
+    return sqrt(dx * dx + dy * dy + dz * dz);
 }
 
+struct stepper_kinematics * __visible tripteron_stepper_alloc(double *rail_positions, double radius, double *arm_lengths, double *angles) {
+    struct tripteron_kinematics *tk = malloc(sizeof(*tk));
+    struct tripteron_stepper *ts = malloc(sizeof(*ts));
+    memset(tk, 0, sizeof(*tk));
+    memset(ts, 0, sizeof(*ts));
+    
+    memcpy(ts->rail_positions, rail_positions, sizeof(ts->rail_positions));
+    ts->radius = radius;
+    memcpy(ts->arm_lengths, arm_lengths, sizeof(ts->arm_lengths));
+    memcpy(ts->angles, angles, sizeof(ts->angles));
 
-// this one just allocates the memory and uses the above function
-struct stepper_kinematics * __visible tripteron_stepper_alloc(double arm2, double tower_x, double tower_y)
-{
-
+    tk->ts = ts;
+    
+    tk->sk.calc_position_cb = tripteron_stepper_calc_position;
+    tk->sk.active_flags = AF_X | AF_Y | AF_Z;
+    
+    return &tk->sk;
 }
+
